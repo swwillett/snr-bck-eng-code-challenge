@@ -37,6 +37,7 @@ export class WebhookController {
       throw new UnauthorizedException('Invalid authorization token');
     }
 
-    return this.webhookService.processCoordinates(payload);
+    const attractions = await this.webhookService.processCoordinates(payload);
+    return { message: 'Coordinates processed successfully', attractions };
   }
 }

@@ -4,6 +4,7 @@ import { WebhookController } from './webhook/webhook.controller';
 import { WebhookService } from './webhook/webhook.service';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { OverpassService } from './overpass/overpass.service';
 
 @Module({
   imports: [
@@ -12,6 +13,6 @@ import { AppService } from './app.service';
     }),
   ],
   controllers: [AppController, WebhookController],
-  providers: [AppService, WebhookService],
+  providers: [AppService, WebhookService, OverpassService],
 })
 export class AppModule {}
