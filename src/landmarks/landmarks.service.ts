@@ -60,4 +60,35 @@ export class LandmarksService {
       landmarks,
     };
   }
+
+  async createLandmarks(
+    attractions: any[],
+    lat: number,
+    lng: number,
+  ): Promise<Landmark[]> {
+    const landmarks = attractions.map((attraction) => {
+      const landmark = new Landmark();
+      landmark.name = attraction.tags?.name;
+      landmark.type = attraction.type;
+      landmark.lat = attraction.lat || lat;
+      landmark.lng = attraction.lon || lng;
+      landmark.originalRequest = false;
+      return landmark;
+    });
+
+    await this.landmarkRepository.save(landmarks);
+    return landmarks;
+  }
+
+  async createFallbackLandmark(lat: number, lng: number): Promise<Landmark> {
+    const landmark = new Landmark();
+    landmark.name = 'No Attractions Found';
+    landmark.type = 'fallback';
+    landmark.lat = lat;
+    landmark.lng = lng;
+    landmark.originalRequest = true;
+
+    await this.landmarkRepository.save(landmark);
+    return landmark;
+  }
 }

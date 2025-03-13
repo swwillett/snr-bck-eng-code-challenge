@@ -2,19 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OverpassService } from '../overpass/overpass.service';
 import { WebhookDto } from './dto/webhook.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Landmark } from '../landmarks/landmark.entity/landmark.entity';
-import { CacheService } from '../cache/cache.service';
+import { LandmarksService } from '../landmarks/landmarks.service';
 
 @Injectable()
 export class WebhookService {
   constructor(
     private readonly configService: ConfigService,
     private readonly overpassService: OverpassService,
-    @InjectRepository(Landmark)
-    private readonly landmarkRepository: Repository<Landmark>,
-    private readonly cacheService: CacheService,
+    private readonly landmarksService: LandmarksService,
   ) {}
 
   validateAuthHeader(authHeader: string): boolean {
@@ -29,35 +24,19 @@ export class WebhookService {
       lat,
       lng,
     );
-
-    let landmarks: Landmark[];
+    let landmarks;
 
     if (attractions.length > 0) {
-      landmarks = attractions.map((attraction) => {
-        const landmark = new Landmark();
-        landmark.name = attraction.tags?.name;
-        landmark.type = attraction.type;
-        landmark.lat = attraction.lat || lat;
-        landmark.lng = attraction.lon || lng;
-        landmark.originalRequest = false;
-        return landmark;
-      });
-
-      await this.landmarkRepository.save(landmarks);
+      landmarks = await this.landmarksService.createLandmarks(
+        attractions,
+        lat,
+        lng,
+      );
     } else {
-      const landmark = new Landmark();
-      landmark.name = 'No Attractions Found';
-      landmark.type = 'fallback';
-      landmark.lat = lat;
-      landmark.lng = lng;
-      landmark.originalRequest = true;
-
-      await this.landmarkRepository.save(landmark);
-      landmarks = [landmark];
+      landmarks = [
+        await this.landmarksService.createFallbackLandmark(lat, lng),
+      ];
     }
-
-    const cacheKey = this.cacheService.getCacheKey(lat, lng);
-    this.cacheService.set(cacheKey, landmarks);
 
     return landmarks;
   }

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import * as dotenv from 'dotenv';
 
@@ -31,8 +31,10 @@ describe('WebhookController (e2e)', () => {
       .post('/webhook')
       .set('Authorization', `Bearer ${WEBHOOK_SECRET}`)
       .send({ lat: 48.8584, lng: 2.2945 })
-      .expect(200)
-      .expect('Coordinates processed successfully');
+      .expect(201)
+      .expect((res) => {
+        expect(res.body.message).toBe('Coordinates processed successfully');
+      });
   });
 
   it('/webhook (POST) - Unauthorized', () => {

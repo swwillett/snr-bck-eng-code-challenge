@@ -17,7 +17,6 @@ export class WebhookController {
   constructor(private readonly webhookService: WebhookService) {}
 
   @Post()
-  @HttpCode(HttpStatus.OK)
   @ApiHeader({
     name: 'Authorization',
     description: 'Secret key for authentication',
