@@ -10,11 +10,18 @@ import { Landmark } from './landmarks/landmark.entity/landmark.entity';
 import { CacheService } from './cache/cache.service';
 import { LandmarksController } from './landmarks/landmarks.controller';
 import { LandmarksService } from './landmarks/landmarks.service';
+import * as Joi from 'joi';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validationSchema: Joi.object({
+        WEBHOOK_SECRET: Joi.string().required(),
+        OVERPASS_API_URL: Joi.string().uri().required(),
+        OVERPASS_RADIUS: Joi.number().default(500),
+        DATABASE_PATH: Joi.string().required(),
+      }),
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -29,6 +36,12 @@ import { LandmarksService } from './landmarks/landmarks.service';
     TypeOrmModule.forFeature([Landmark]),
   ],
   controllers: [AppController, WebhookController, LandmarksController],
-  providers: [AppService, WebhookService, OverpassService, CacheService, LandmarksService],
+  providers: [
+    AppService,
+    WebhookService,
+    OverpassService,
+    CacheService,
+    LandmarksService,
+  ],
 })
 export class AppModule {}

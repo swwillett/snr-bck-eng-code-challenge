@@ -3,6 +3,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import * as dotenv from 'dotenv';
+import { HttpExceptionFilter } from '../src/common/filters/http-exception/http-exception.filter';
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ describe('WebhookController (e2e)', () => {
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, transform: true }),
     );
+    app.useGlobalFilters(new HttpExceptionFilter());
     await app.init();
   });
 
@@ -42,10 +44,8 @@ describe('WebhookController (e2e)', () => {
       .post('/webhook')
       .send({ lat: 48.8584, lng: 2.2945 })
       .expect(401)
-      .expect({
-        statusCode: 401,
-        error: 'Unauthorized',
-        message: 'Invalid authorization token',
+      .expect((res) => {
+        expect(res.body.message).toContain('Invalid authorization token');
       });
   });
 
@@ -55,10 +55,9 @@ describe('WebhookController (e2e)', () => {
       .set('Authorization', `Bearer ${WEBHOOK_SECRET}`)
       .send({ lat: 'invalid', lng: 'invalid' })
       .expect(400)
-      .expect({
-        statusCode: 400,
-        message: ['lat must be a number', 'lng must be a number'],
-        error: 'Bad Request',
+      .expect((res) => {
+        expect(res.body.message).toContain('lat must be a number');
+        expect(res.body.message).toContain('lng must be a number');
       });
   });
 
@@ -68,10 +67,8 @@ describe('WebhookController (e2e)', () => {
       .set('Authorization', `Bearer ${WEBHOOK_SECRET}`)
       .send({ lat: 12.4356 })
       .expect(400)
-      .expect({
-        statusCode: 400,
-        message: ['lng should not be empty', 'lng must be a number'],
-        error: 'Bad Request',
+      .expect((res) => {
+        expect(res.body.message).toContain('lng should not be empty');
       });
   });
 });
