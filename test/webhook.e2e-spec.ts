@@ -28,47 +28,43 @@ describe('WebhookController (e2e)', () => {
     await app.close();
   });
 
-  it('/webhook (POST) - Success', () => {
-    return request(app.getHttpServer())
+  it('/webhook (POST) - Success', async () => {
+    const response = await request(app.getHttpServer())
       .post('/webhook')
       .set('Authorization', `Bearer ${WEBHOOK_SECRET}`)
       .send({ lat: 48.8584, lng: 2.2945 })
-      .expect(201)
-      .expect((res) => {
-        expect(res.body.message).toBe('Coordinates processed successfully');
-      });
+      .expect(201);
+
+    expect(response.body.message).toBe('Coordinates processed successfully');
   });
 
-  it('/webhook (POST) - Unauthorized', () => {
-    return request(app.getHttpServer())
+  it('/webhook (POST) - Unauthorized', async () => {
+    const response = await request(app.getHttpServer())
       .post('/webhook')
       .send({ lat: 48.8584, lng: 2.2945 })
-      .expect(401)
-      .expect((res) => {
-        expect(res.body.message).toContain('Invalid authorization token');
-      });
+      .expect(401);
+
+    expect(response.body.message).toContain('Invalid authorization token');
   });
 
-  it('/webhook (POST) - Bad Request', () => {
-    return request(app.getHttpServer())
+  it('/webhook (POST) - Bad Request', async () => {
+    const response = await request(app.getHttpServer())
       .post('/webhook')
       .set('Authorization', `Bearer ${WEBHOOK_SECRET}`)
       .send({ lat: 'invalid', lng: 'invalid' })
-      .expect(400)
-      .expect((res) => {
-        expect(res.body.message).toContain('lat must be a number');
-        expect(res.body.message).toContain('lng must be a number');
-      });
+      .expect(400);
+
+    expect(response.body.message).toContain('lat must be a number');
+    expect(response.body.message).toContain('lng must be a number');
   });
 
-  it('/webhook (POST) - Bad Request', () => {
-    return request(app.getHttpServer())
+  it('/webhook (POST) - Bad Request', async () => {
+    const response = await request(app.getHttpServer())
       .post('/webhook')
       .set('Authorization', `Bearer ${WEBHOOK_SECRET}`)
       .send({ lat: 12.4356 })
-      .expect(400)
-      .expect((res) => {
-        expect(res.body.message).toContain('lng should not be empty');
-      });
+      .expect(400);
+
+    expect(response.body.message).toContain('lng should not be empty');
   });
 });
