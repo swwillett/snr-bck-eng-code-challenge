@@ -1,98 +1,154 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Overpass Code Challenge Solution
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+This is a NestJS application that integrates with the Overpass API to fetch and store nearby landmarks. It includes features like:
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+- Protected webhook endpoint for receiving coordinates.
+- Integration with the Overpass API to fetch nearby landmarks.
+- Storage of landmarks in a SQLite database.
+- Caching of landmarks for faster retrieval.
+- Error handling for invalid inputs, missing environment variables, and external API failures.
+- End-to-end (e2e) testing for all endpoints.
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Installation
 
-## Project setup
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/swwillett/snr-bck-eng-code-challenge.git
+   cd snr-bck-eng-code-challenge
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a .env file:
+   ```bash
+   echo "WEBHOOK_SECRET=SNR_BCK_ENG_CODE_CHALLENGE_WEBHOOK_SECRET_KEY" > .env
+   echo "OVERPASS_API_URL=https://overpass-api.de/api/interpreter" >> .env
+   echo "OVERPASS_RADIUS=500" >> .env
+   echo "DATABASE_PATH=./database.sqlite" >> .env
+   ```
+4. Start the application:
+   ```bash
+   npm run start
+   ```
 
-```bash
-$ npm install
-```
+## Testing
 
-## Compile and run the project
+### Running e2e Tests
 
-```bash
-# development
-$ npm run start
+- The application includes end-to-end tests to verify the functionality of all endpoints. These tests ensure that the webhook, Overpass API integration, database, and caching work as expected.
+- Run the e2e tests: `npm run test:e2e`
 
-# watch mode
-$ npm run start:dev
+### POST /webhook
 
-# production mode
-$ npm run start:prod
-```
+- Fetch and store landmarks near the Eiffel Tower:
 
-## Run tests
+  ```bash
+  curl -X POST http://localhost:3000/webhook \
+  -H "Authorization: Bearer SNR_BCK_ENG_CODE_CHALLENGE_WEBHOOK_SECRET_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{\"lat\": 48.8584, \"lng\": 2.2945}"
+  ```
 
-```bash
-# unit tests
-$ npm run test
+- Expected Response:
+  ```json
+  {
+    "message": "Coordinates processed successfully",
+    "attractions": [
+      {
+        "id": 2,
+        "name": "Tour Eiffel",
+        "type": "way",
+        "lat": 48.8584,
+        "lng": 2.2945,
+        "originalRequest": false
+      },
+      ...
+    ]
+  }
+  ```
 
-# e2e tests
-$ npm run test:e2e
+### GET /landmarks
 
-# test coverage
-$ npm run test:cov
-```
+- Retrieve landmarks near the Eiffel Tower:
 
-## Deployment
+  ```bash
+  curl -X GET "http://localhost:3000/landmarks?lat=48.8584&lng=2.2945"
+  ```
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- First Request (Database):
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+  ```json
+  {
+    "message": "Landmarks retrieved from database",
+    "landmarksCount": 211,
+    "landmarks": [
+      {
+        "id": 2,
+        "name": "Tour Eiffel",
+        "type": "way",
+        "lat": 48.8584,
+        "lng": 2.2945,
+        "originalRequest": false
+      },
+      ...
+    ]
+  }
+  ```
 
-```bash
-$ npm install -g mau
-$ mau deploy
-```
+- Subsequent Requests (Cache):
+  ```json
+  {
+    "message": "Landmarks retrieved from cache",
+    "landmarksCount": 211,
+    "landmarks": [
+      {
+        "id": 2,
+        "name": "Tour Eiffel",
+        "type": "way",
+        "lat": 48.8584,
+        "lng": 2.2945,
+        "originalRequest": false
+      },
+      ...
+    ]
+  }
+  ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Error Handling
 
-## Resources
+- Missing Environment Variables
+  The application will fail to start if required environment variables are missing.
+- Invalid Coordinates
+  Returns a `400 Bad Request` if coordinates are outside valid ranges.
+- Overpass API Errors
+  Returns a `500 Internal Server Error` if the Overpass API is unreachable or returns an error.
+- Unexpected Errors
+  All unexpected errors are caught by the global exception filter and logged for debugging.
 
-Check out a few resources that may come in handy when working with NestJS:
+## Inspecting the SQLite Database
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+The application uses SQLite to store landmarks. The database file is located at `./database.sqlite`.
 
-## Support
+### Using DB Browser for SQLite
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+1. Download and install [DB Browser for SQLite](https://sqlitebrowser.org/).
+2. Open the `database.sqlite` file in DB Browser.
+3. Navigate to the `landmark` table to view stored landmarks.
 
-## Stay in touch
+### Using SQLite CLI
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- Install SQLite CLI (if not already installed):
+  ```bash
+  sudo apt install sqlite3
+  ```
+- Open the database:
+  ```bash
+  sqlite3 ./database.sqlite
+  ```
+- Query the landmark table:
+  ```
+  SELECT * FROM landmark;
+  ```
