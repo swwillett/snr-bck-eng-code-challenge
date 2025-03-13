@@ -6,7 +6,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { OverpassService } from './overpass/overpass.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Landmark } from './landmark/landmark.entity/landmark.entity';
+import { Landmark } from './landmarks/landmark.entity/landmark.entity';
+import { CacheService } from './cache/cache.service';
+import { LandmarksController } from './landmarks/landmarks.controller';
+import { LandmarksService } from './landmarks/landmarks.service';
 
 @Module({
   imports: [
@@ -25,7 +28,7 @@ import { Landmark } from './landmark/landmark.entity/landmark.entity';
     }),
     TypeOrmModule.forFeature([Landmark]),
   ],
-  controllers: [AppController, WebhookController],
-  providers: [AppService, WebhookService, OverpassService],
+  controllers: [AppController, WebhookController, LandmarksController],
+  providers: [AppService, WebhookService, OverpassService, CacheService, LandmarksService],
 })
 export class AppModule {}

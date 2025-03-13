@@ -4,7 +4,8 @@ import { OverpassService } from '../overpass/overpass.service';
 import { WebhookDto } from './dto/webhook.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Landmark } from '../landmark/landmark.entity/landmark.entity';
+import { Landmark } from '../landmarks/landmark.entity/landmark.entity';
+import { CacheService } from '../cache/cache.service';
 
 @Injectable()
 export class WebhookService {
@@ -13,6 +14,7 @@ export class WebhookService {
     private readonly overpassService: OverpassService,
     @InjectRepository(Landmark)
     private readonly landmarkRepository: Repository<Landmark>,
+    private readonly cacheService: CacheService,
   ) {}
 
   validateAuthHeader(authHeader: string): boolean {
@@ -28,10 +30,12 @@ export class WebhookService {
       lng,
     );
 
+    let landmarks: Landmark[];
+
     if (attractions.length > 0) {
-      const landmarks = attractions.map((attraction) => {
+      landmarks = attractions.map((attraction) => {
         const landmark = new Landmark();
-        landmark.name = attraction.tags?.name || 'Unnamed Attraction';
+        landmark.name = attraction.tags?.name;
         landmark.type = attraction.type;
         landmark.lat = attraction.lat || lat;
         landmark.lng = attraction.lon || lng;
@@ -40,17 +44,21 @@ export class WebhookService {
       });
 
       await this.landmarkRepository.save(landmarks);
-      return landmarks;
     } else {
       const landmark = new Landmark();
-      landmark.name = 'No Nearby Attractions';
+      landmark.name = 'No Attractions Found';
       landmark.type = 'fallback';
       landmark.lat = lat;
       landmark.lng = lng;
       landmark.originalRequest = true;
 
       await this.landmarkRepository.save(landmark);
-      return [landmark];
+      landmarks = [landmark];
     }
+
+    const cacheKey = this.cacheService.getCacheKey(lat, lng);
+    this.cacheService.set(cacheKey, landmarks);
+
+    return landmarks;
   }
 }
