@@ -9,7 +9,7 @@ export class GetLandmarksDto {
   @Max(90)
   lat: number;
 
-  @IsNumber({}, { message: 'lat must be a number' })
+  @IsNumber({}, { message: 'lng must be a number' })
   @IsNotEmpty()
   @Type(() => Number)
   @Min(-180)

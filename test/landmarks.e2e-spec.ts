@@ -39,7 +39,7 @@ describe('Landmarks E2E', () => {
   it('should return no landmarks found for invalid coordinates', async () => {
     const response = await request(app.getHttpServer())
       .get('/landmarks')
-      .query({ lat: 0, lng: 0 })
+      .query({ lat: -90, lng: -180 })
       .expect(200);
 
     expect(response.body.message).toBe('No landmarks found');
@@ -65,5 +65,53 @@ describe('Landmarks E2E', () => {
       'No Attractions Found',
     );
     expect(fallbackResponse.body.landmarks[0].originalRequest).toBe(true);
+  });
+
+  it('should retrieve landmarks from cache', async () => {
+    await request(app.getHttpServer())
+      .post('/webhook')
+      .set('Authorization', `Bearer ${WEBHOOK_SECRET}`)
+      .send({ lat: 40.7128, lng: -74.006 })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .get('/landmarks')
+      .query({ lat: 40.7128, lng: -74.006 })
+      .expect(200);
+
+    const cachedResponse = await request(app.getHttpServer())
+      .get('/landmarks')
+      .query({ lat: 40.7128, lng: -74.006 })
+      .expect(200);
+
+    expect(cachedResponse.body.message).toBe('Landmarks retrieved from cache');
+  });
+
+  it('should handle requests with missing query parameters', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/landmarks')
+      .expect(400);
+
+    expect(response.body.message).toContain('lat should not be empty');
+    expect(response.body.message).toContain('lng should not be empty');
+  });
+
+  it('should handle invalid lat and lng types', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/landmarks')
+      .query({ lat: 'invalid', lng: 'invalid' })
+      .expect(400);
+
+    expect(response.body.message).toContain('lat must be a number');
+    expect(response.body.message).toContain('lng must be a number');
+  });
+
+  it('should return 400 for out-of-range latitude values', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/landmarks')
+      .query({ lat: 91, lng: -74.006 })
+      .expect(400);
+
+    expect(response.body.message).toContain('lat must not be greater than 90');
   });
 });
