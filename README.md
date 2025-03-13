@@ -24,10 +24,10 @@ This is a NestJS application that integrates with the Overpass API to fetch and 
    ```
 3. Create a .env file:
    ```bash
-   echo "WEBHOOK_SECRET=SNR_BCK_ENG_CODE_CHALLENGE_WEBHOOK_SECRET_KEY" > .env
-   echo "OVERPASS_API_URL=https://overpass-api.de/api/interpreter" >> .env
-   echo "OVERPASS_RADIUS=500" >> .env
-   echo "DATABASE_PATH=./database.sqlite" >> .env
+   echo WEBHOOK_SECRET=SNR_BCK_ENG_CODE_CHALLENGE_WEBHOOK_SECRET_KEY > .env
+   echo OVERPASS_API_URL=https://overpass-api.de/api/interpreter >> .env
+   echo OVERPASS_RADIUS=500 >> .env
+   echo DATABASE_PATH=./database.sqlite >> .env
    ```
 4. Start the application:
    ```bash
